@@ -1,0 +1,13 @@
+version: 20210506-dev
+config:
+  out.s3.accesskey: "SDZLR73K4K4M3QH4MWEX"
+  out.s3.secretkey: "AeY2peMj4Ez+WTBkszAz7mDPcg2O4phf/oaGroykWtg"
+  out.s3.bucket: "aravind-bucket"
+  out.s3.folder: "TestDemo"
+  out.s3.region: "nyc3"
+  out.s3.endpoint.url: "nyc3.digitaloceanspaces.com"
+  out.s3.sign.payload: "true"
+services:
+  - indexer
+  - search
+  - gateway
