@@ -1,0 +1,55 @@
+version: '3'
+networks:
+  infra-kaf:
+    driver: bridge
+services:
+{{- if .HasService "indexer"}}
+  indexer:
+    image: episilia/dev-log-indexer:{{.Version}}
+    restart: always
+    container_name: indexer
+    environment:
+        {{- range $key,$val:=.Config}}
+            {{ $key}}: {{$val}}{{end }}
+    ports:
+      - "9090:9090"
+    networks:
+      - infra-kaf{{end}}
+{{- if .HasService "search"}}
+  search:
+    image: episilia/dev-search:{{.Version}}
+    restart: always
+    container_name: episilia-search
+    environment:
+        {{- range $key,$val:=.Config}}
+            {{ $key}}: {{$val}}{{end }}
+    ports:
+      - "4040:4040"
+    networks:
+      - infra-kaf{{end}}
+{{- if .HasService "gateway"}}
+  gateway:
+    image: episilia/dev-gateway:{{.Version}}
+    restart: always
+    container_name: episilia-gateway
+    depends_on:
+      - search
+    environment:
+  {{- range $key,$val:=.Config}}
+      {{ $key}}: {{$val}}{{end }}
+    network_mode: host
+    ports:
+    - "9002:9002"{{end}}
+{{- if .HasService "historic-search"}}
+  historic-gateway:
+    image: episilia/gateway:{{.Version}}
+    restart: always
+    container_name: episilia-historic-gateway
+    depends_on:
+      - historic-search
+    environment:
+  {{- range $key,$val:=.Config}}
+      {{ $key}}: {{$val}}{{end }}
+    network_mode: host
+    ports:
+    - "9005:9005"{{end}}
