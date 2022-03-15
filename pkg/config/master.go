@@ -8,6 +8,7 @@ type Master struct {
 	Indexer map[string]string `yaml:"indexer"`
 	Search map[string]string `yaml:"search"`
 	Logwatcher map[string]string `yaml:"logwatcher"`
+	HistoricSearch map[string]string `yaml:"historic-search"`
 	Service []string          `yaml:"services"`
 }
 
@@ -18,4 +19,13 @@ func (m Master) HasService(service string) bool {
 		}
 	}
 	return false
+}
+
+func (m Master) GetValue(data map[string]string, key string) string {
+	for k, v := range data {
+		if k == key {
+			return v
+		}
+	}
+	return "null"
 }

@@ -2,12 +2,12 @@ version: 1.2.2
 
 services:
   - cpanel
+  - gateway
   - indexer
   - optimizer
   - search
-  - historic-search
   - logwatcher
-  - gateway
+  - historic-search
   - grafana
 
 common:
@@ -23,6 +23,7 @@ common:
   datastore.s3.work.folder: "work-folder"
   kafka.indexer.logs.topics: "log"
   kafka.metadata.broker.list: "localhost:9092"
+  kafka.indexer.group: "episilia-indexer-group"
   kafka.topic.cpanel.out: "cpaneld"
   ops.cpanel.data.publish.interval.seconds: "600"
   ops.license.url: "episilia_cpanel:8080"
@@ -40,6 +41,8 @@ gateway:
   gateway.search.timeout.seconds: "120"
   gateway.search.url: "episilia_search:4040"
 indexer:
+  indexer.api.http.port: "9090"
+  optimizer.api.http.port: "9080"
   indexer.schema.appid.fixed: "defaultApp"
   indexer.schema.appid.keys: ""
   indexer.schema.tenantid.fixed: "defaultTenant"
@@ -48,7 +51,6 @@ indexer:
   indexer.schema.message.key: "message"
   indexer.schema.timestamp.formats: "%Y-%m-%dT%H:%M:%S"
   indexer.schema.timestamp.key: "time"
-  kafka.indexer.group: "episilia-indexer-group"
   kafka.topic.index.live: "stagefiles"
   kafka.topic.index.optimized: "optfiles"
   kafka.topic.optimize.request: "stagefolder"
@@ -61,6 +63,7 @@ search:
   search.live.to.hours: "0"
   search.ops.index.cache.resetonstart: "true"
 logwatcher:
+  logwatcher.api.http.port: "9090"
   kafka.group.logwatcher: "episilia-logwatcher-group"
   kafka.group.logwatcher.alert: "episilia-logwatcher-alert-group"
   kafka.group.logwatcher.tail: "episilia-logwatcher-tail-group"

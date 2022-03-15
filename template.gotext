@@ -16,11 +16,11 @@ services:
       {{ $key}}: "{{$val}}"{{end }}
     {{- range $key,$val:=.Cpanel}}
       {{ $key}}: "{{$val}}"{{end }}
+      kafka.topic.alert.response.out: {{ .GetValue .Logwatcher "kafka.topic.alert.response.out"}}
     network_mode: host
     ports:
-      - "8080:8080"
-      - "8090:8090"
-      - "8060:8060"
+      - "{{ .GetValue .Cpanel "cpanel.api.grpc.port"}}:{{ .GetValue .Cpanel "cpanel.api.grpc.port"}}"
+      - "{{ .GetValue .Cpanel "cpanel.api.metrics.port"}}:{{ .GetValue .Cpanel "cpanel.api.metrics.port"}}"
     networks:
       - infra-kaf{{end}}
 
@@ -39,7 +39,7 @@ services:
       ops.server.mode: "gateway"
     network_mode: host
     ports:
-      - "9002:9002"
+      - "{{ .GetValue .Gateway "gateway.api.http.port"}}:{{ .GetValue .Gateway "gateway.api.http.port"}}"
     networks:
       - infra-kaf{{end}}
 
@@ -47,7 +47,7 @@ services:
   indexer:
     image: episilia/log-indexer:{{.Version}}
     restart: always
-    container_name: indexer
+    container_name: episilia-indexer
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -56,7 +56,24 @@ services:
       ops.server.mode: "indexer"
     network_mode: host
     ports:
-      - "9090:9090"
+      - "{{ .GetValue .Indexer "indexer.api.http.port"}}:{{ .GetValue .Indexer "indexer.api.http.port"}}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "optimizer"}}
+  optimizer:
+    image: episilia/log-indexer:{{.Version}}
+    restart: always
+    container_name: episilia-optimizer
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "optimizer"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Indexer "optimizer.api.http.port"}}:{{ .GetValue .Indexer "optimizer.api.http.port"}}"
     networks:
       - infra-kaf{{end}}
       
@@ -74,7 +91,62 @@ services:
       search.mode: "live"
     network_mode: host
     ports:
-      - "4040:4040"
+      - "{{ .GetValue .Search "search.api.grpc.port"}}:{{ .GetValue .Search "search.api.grpc.port"}}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "logwatcher"}}
+  logwatcher:
+    image: episilia/log-indexer:{{.Version}}
+    restart: always
+    container_name: episilia-logwatcher
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Logwatcher}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "log_watcher"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Logwatcher "logwatcher.api.http.port"}}:{{ .GetValue .Logwatcher "logwatcher.api.http.port"}}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "historic-search"}}
+  historic-gateway:
+    image: episilia/gateway:{{.Version}}
+    restart: always
+    container_name: episilia-historic-gateway
+    depends_on:
+      - search
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Gateway}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "gateway"
+      gateway.api.http.port: {{ .GetValue .HistoricSearch "gateway.api.http.port"}}
+    network_mode: host
+    ports:
+      - "{{ .GetValue .HistoricSearch "gateway.api.http.port"}}:{{ .GetValue .HistoricSearch "gateway.api.http.port"}}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "historic-search"}}
+  historic-search:
+    image: episilia/search:{{.Version}}
+    restart: always
+    container_name: episilia-historic-search
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.HistoricSearch}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "search"
+      search.mode: "fixed"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .HistoricSearch "search.api.grpc.port"}}:{{ .GetValue .HistoricSearch "search.api.grpc.port"}}"
     networks:
       - infra-kaf{{end}}
 
