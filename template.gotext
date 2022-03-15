@@ -1,55 +1,91 @@
-version: '3'
+version: '3.4'
 networks:
   infra-kaf:
-    driver: bridge
+    driver: overlay
+
 services:
-{{- if .HasService "indexer"}}
-  indexer:
-    image: episilia/dev-log-indexer:{{.Version}}
+{{- if .HasService "cpanel"}}
+  cpanel:
+    image: episilia/cpanel:{{.Version}}
     restart: always
-    container_name: indexer
+    container_name: episilia-cpanel
+    depends_on:
+      - gateway
     environment:
-        {{- range $key,$val:=.Config}}
-            {{ $key}}: {{$val}}{{end }}
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Cpanel}}
+      {{ $key}}: "{{$val}}"{{end }}
+    network_mode: host
     ports:
-      - "9090:9090"
+      - "8080:8080"
+      - "8090:8090"
+      - "8060:8060"
     networks:
       - infra-kaf{{end}}
-{{- if .HasService "search"}}
-  search:
-    image: episilia/dev-search:{{.Version}}
-    restart: always
-    container_name: episilia-search
-    environment:
-        {{- range $key,$val:=.Config}}
-            {{ $key}}: {{$val}}{{end }}
-    ports:
-      - "4040:4040"
-    networks:
-      - infra-kaf{{end}}
+
 {{- if .HasService "gateway"}}
   gateway:
-    image: episilia/dev-gateway:{{.Version}}
+    image: episilia/gateway:{{.Version}}
     restart: always
     container_name: episilia-gateway
     depends_on:
       - search
     environment:
-  {{- range $key,$val:=.Config}}
-      {{ $key}}: {{$val}}{{end }}
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Gateway}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "gateway"
     network_mode: host
     ports:
-    - "9002:9002"{{end}}
-{{- if .HasService "historic-search"}}
-  historic-gateway:
-    image: episilia/gateway:{{.Version}}
+      - "9002:9002"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "indexer"}}
+  indexer:
+    image: episilia/log-indexer:{{.Version}}
     restart: always
-    container_name: episilia-historic-gateway
-    depends_on:
-      - historic-search
+    container_name: indexer
     environment:
-  {{- range $key,$val:=.Config}}
-      {{ $key}}: {{$val}}{{end }}
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "indexer"
     network_mode: host
     ports:
-    - "9005:9005"{{end}}
+      - "9090:9090"
+    networks:
+      - infra-kaf{{end}}
+      
+{{- if .HasService "search"}}
+  search:
+    image: episilia/search:{{.Version}}
+    restart: always
+    container_name: episilia-search
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Search}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "search"
+      search.mode: "live"
+    network_mode: host
+    ports:
+      - "4040:4040"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "grafana"}}
+  grafana:
+    image: docker.io/grafana/grafana:8.0.5-ubuntu
+    restart: always
+    container_name: grafana
+    network_mode: host
+    ports:
+      - "80:3000"
+    networks:
+      - infra-kaf{{end}}
+

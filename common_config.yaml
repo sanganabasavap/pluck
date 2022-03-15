@@ -1,4 +1,5 @@
 version: 1.2.2
+
 services:
   - cpanel
   - indexer
@@ -8,23 +9,37 @@ services:
   - logwatcher
   - gateway
   - grafana
-config:
+
+common:
   client.env: "env"
   client.id: "episilia"
   client.license.key: ""
-  cpanel.api.access.key: "token"
-  cpanel.api.access.token: ""
-  cpanel.gateway.server: "episilia_gateway:9002"
   datastore.s3.accesskey: ""
   datastore.s3.secretkey: ""
-  datastore.s3.endpoint.url: ""
+  datastore.s3.region: ""
+  datastore.s3.endpoint.url: "https://objectstore.e2enetworks.net"
   datastore.s3.bucket: "episilia-bucket"
   datastore.s3.folder: "episilia-folder"
-  datastore.s3.region: "sgp1"
   datastore.s3.work.folder: "work-folder"
+  kafka.indexer.logs.topics: "log"
+  kafka.metadata.broker.list: "localhost:9092"
+  kafka.topic.cpanel.out: "cpaneld"
+  ops.cpanel.data.publish.interval.seconds: "600"
+  ops.license.url: "episilia_cpanel:8080"
+  ops.log.debug: "true"
+cpanel:
+  cpanel.api.access.key: "token"
+  cpanel.api.access.token: ""
+  cpanel.api.grpc.port: "8080"
+  cpanel.api.metrics.port: "8090"
+  cpanel.gateway.server: "episilia_gateway:9002"
+  kafka.group.cpanel: "episilia-cpanel-group"
+  alert.prometheus.gateway: "pushgateway:5070"
+gateway:
   gateway.api.http.port: "9002"
   gateway.search.timeout.seconds: "120"
   gateway.search.url: "episilia_search:4040"
+indexer:
   indexer.schema.appid.fixed: "defaultApp"
   indexer.schema.appid.keys: ""
   indexer.schema.tenantid.fixed: "defaultTenant"
@@ -32,32 +47,35 @@ config:
   indexer.schema.exclude: "['time']"
   indexer.schema.message.key: "message"
   indexer.schema.timestamp.formats: "%Y-%m-%dT%H:%M:%S"
-  indexer.schema.timestamp.key: "time"  
-  kafka.group.cpanel: "episilia-cpanel-group"
-  kafka.group.search: "episilia-search-group"
+  indexer.schema.timestamp.key: "time"
   kafka.indexer.group: "episilia-indexer-group"
-  kafka.group.logwatcher: "episilia-logwatcher-group"
-  kafka.group.logwatcher.alert: "episilia-logwatcher-alert-group"
-  kafka.group.logwatcher.tail: "episilia-logwatcher-tail-group"
-  kafka.indexer.logs.topics: "logs"
-  kafka.metadata.broker.list: "localhost:9092"
-  kafka.topic.alert.response.out: "alert_out"
-  kafka.topic.tail.request.in: "tail_in"
-  kafka.topic.tail.response.out: "tail_out"
-  kafka.topic.cpanel.out: "cpaneld"
   kafka.topic.index.live: "stagefiles"
   kafka.topic.index.optimized: "optfiles"
   kafka.topic.optimize.request: "stagefolder"
-  ops.cpanel.data.publish.interval.seconds: "600"
-  ops.license.url: "episilia_cpanel:8080"
-  ops.log.debug: "true"
-  alert.request.file.url: "/bucket/folder/alert_rules.json"
+search:
+  kafka.group.search: "episilia-search-group"
   search.api.grpc.port: "4040"
   search.api.response.max.mb: "100"
   search.api.timeout.seconds: "60"
-  search.fixed.from.yyyymmddhh: "2021090100"
-  search.fixed.to.yyyymmddhh: "2021122223"
-  search.live.from.hours: "48"
+  search.live.from.hours: "24"
   search.live.to.hours: "0"
-  search.mode: "live"
   search.ops.index.cache.resetonstart: "true"
+logwatcher:
+  kafka.group.logwatcher: "episilia-logwatcher-group"
+  kafka.group.logwatcher.alert: "episilia-logwatcher-alert-group"
+  kafka.group.logwatcher.tail: "episilia-logwatcher-tail-group"
+  kafka.topic.alert.response.out: "alert_out"
+  kafka.topic.tail.request.in: "tail_in"
+  kafka.topic.tail.response.out: "tail_out"
+  indexer.ops.alert.enable: "true"
+  indexer.ops.tail.enable: "true"
+  indexer.live.block.maxwait.ms: "2000"
+  indexer.live.block.maxrecord.count: "1000"
+historic-search:
+  gateway.api.http.port: "9001"
+  search.api.grpc.port: "4041"
+  search.api.response.max.mb: "100"
+  search.api.timeout.seconds: "60"
+  search.fixed.from.yyyymmddhh: "2022031200"
+  search.fixed.to.yyyymmddhh: "2022031300"
+

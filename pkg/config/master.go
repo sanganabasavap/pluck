@@ -2,7 +2,12 @@ package config
 
 type Master struct {
 	Version string            `yaml:"version"`
-	Config  map[string]string `yaml:"config"`
+	Common map[string]string `yaml:"common"`
+	Cpanel map[string]string `yaml:"cpanel"`
+	Gateway map[string]string `yaml:"gateway"`
+	Indexer map[string]string `yaml:"indexer"`
+	Search map[string]string `yaml:"search"`
+	Logwatcher map[string]string `yaml:"logwatcher"`
 	Service []string          `yaml:"services"`
 }
 
