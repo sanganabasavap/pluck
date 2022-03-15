@@ -9,6 +9,14 @@ services:
     image: episilia/cpanel:{{.Version}}
     restart: always
     container_name: episilia-cpanel
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "cpanel.cpu.limit"}}
+          memory: {{ .GetValue .resources "cpanel.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "cpanel.cpu.request"}}
+          memory: {{ .GetValue .resources "cpanel.memory.request"}}
     depends_on:
       - gateway
     environment:
@@ -29,6 +37,14 @@ services:
     image: episilia/gateway:{{.Version}}
     restart: always
     container_name: episilia-gateway
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "gateway.cpu.limit"}}
+          memory: {{ .GetValue .resources "gateway.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "gateway.cpu.request"}}
+          memory: {{ .GetValue .resources "gateway.memory.request"}}
     depends_on:
       - search
     environment:
@@ -48,6 +64,14 @@ services:
     image: episilia/log-indexer:{{.Version}}
     restart: always
     container_name: episilia-indexer
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "indexer.cpu.limit"}}
+          memory: {{ .GetValue .resources "indexer.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "indexer.cpu.request"}}
+          memory: {{ .GetValue .resources "indexer.memory.request"}}
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -65,6 +89,14 @@ services:
     image: episilia/log-indexer:{{.Version}}
     restart: always
     container_name: episilia-optimizer
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "optimizer.cpu.limit"}}
+          memory: {{ .GetValue .resources "optimizer.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "optimizer.cpu.request"}}
+          memory: {{ .GetValue .resources "optimizer.memory.request"}}
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -82,6 +114,14 @@ services:
     image: episilia/search:{{.Version}}
     restart: always
     container_name: episilia-search
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "search.cpu.limit"}}
+          memory: {{ .GetValue .resources "search.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "search.cpu.request"}}
+          memory: {{ .GetValue .resources "search.memory.request"}}
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -100,6 +140,14 @@ services:
     image: episilia/log-indexer:{{.Version}}
     restart: always
     container_name: episilia-logwatcher
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "logwatcher.cpu.limit"}}
+          memory: {{ .GetValue .resources "logwatcher.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "logwatcher.cpu.request"}}
+          memory: {{ .GetValue .resources "logwatcher.memory.request"}}
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -117,6 +165,14 @@ services:
     image: episilia/gateway:{{.Version}}
     restart: always
     container_name: episilia-historic-gateway
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "gateway.cpu.limit"}}
+          memory: {{ .GetValue .resources "gateway.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "gateway.cpu.request"}}
+          memory: {{ .GetValue .resources "gateway.memory.request"}}
     depends_on:
       - search
     environment:
@@ -137,6 +193,14 @@ services:
     image: episilia/search:{{.Version}}
     restart: always
     container_name: episilia-historic-search
+    deploy:
+      resources:
+        limits:
+          cpus: {{ .GetValue .resources "historic.search.cpu.limit"}}
+          memory: {{ .GetValue .resources "historic.search.memory.limit"}}
+        reservations:
+          cpus: {{ .GetValue .resources "historic.search.cpu.request"}}
+          memory: {{ .GetValue .resources "historic.search.memory.request"}}
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
