@@ -12,11 +12,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "cpanel.cpu.limit"}}
-          memory: {{ .GetValue .resources "cpanel.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "cpanel.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "cpanel.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "cpanel.cpu.request"}}
-          memory: {{ .GetValue .resources "cpanel.memory.request"}}
+          cpus: "{{ .GetResource .Resources "cpanel.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "cpanel.memory.request" }}"
     depends_on:
       - gateway
     environment:
@@ -40,11 +40,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "gateway.cpu.limit"}}
-          memory: {{ .GetValue .resources "gateway.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "gateway.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "gateway.cpu.request"}}
-          memory: {{ .GetValue .resources "gateway.memory.request"}}
+          cpus: "{{ .GetResource .Resources "gateway.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.request" }}"
     depends_on:
       - search
     environment:
@@ -67,11 +67,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "indexer.cpu.limit"}}
-          memory: {{ .GetValue .resources "indexer.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "indexer.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "indexer.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "indexer.cpu.request"}}
-          memory: {{ .GetValue .resources "indexer.memory.request"}}
+          cpus: "{{ .GetResource .Resources "indexer.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "indexer.memory.request" }}"
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -92,11 +92,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "optimizer.cpu.limit"}}
-          memory: {{ .GetValue .resources "optimizer.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "optimizer.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "optimizer.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "optimizer.cpu.request"}}
-          memory: {{ .GetValue .resources "optimizer.memory.request"}}
+          cpus: "{{ .GetResource .Resources "optimizer.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "optimizer.memory.request" }}"
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -117,11 +117,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "search.cpu.limit"}}
-          memory: {{ .GetValue .resources "search.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "search.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "search.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "search.cpu.request"}}
-          memory: {{ .GetValue .resources "search.memory.request"}}
+          cpus: "{{ .GetResource .Resources "search.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "search.memory.request" }}"
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -140,14 +140,16 @@ services:
     image: episilia/log-indexer:{{.Version}}
     restart: always
     container_name: episilia-logwatcher
+    depends_on:
+      - tail
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "logwatcher.cpu.limit"}}
-          memory: {{ .GetValue .resources "logwatcher.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "logwatcher.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "logwatcher.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "logwatcher.cpu.request"}}
-          memory: {{ .GetValue .resources "logwatcher.memory.request"}}
+          cpus: "{{ .GetResource .Resources "logwatcher.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "logwatcher.memory.request" }}"
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -159,6 +161,34 @@ services:
       - "{{ .GetValue .Logwatcher "logwatcher.api.http.port"}}:{{ .GetValue .Logwatcher "logwatcher.api.http.port"}}"
     networks:
       - infra-kaf{{end}}
+  
+{{- if .HasService "logwatcher"}}
+  tail:
+    image: episilia/tail:{{.Version}}
+    restart: always
+    container_name: episilia-tail
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "tail.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "tail.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "tail.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "tail.memory.request" }}"
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Logwatcher}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "log_watcher"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Logwatcher "tail.api.http.port"}}:{{ .GetValue .Logwatcher "tail.api.http.port"}}"
+    networks:
+      - infra-kaf{{end}}
+
 
 {{- if .HasService "historic-search"}}
   historic-gateway:
@@ -168,13 +198,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "gateway.cpu.limit"}}
-          memory: {{ .GetValue .resources "gateway.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "gateway.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "gateway.cpu.request"}}
-          memory: {{ .GetValue .resources "gateway.memory.request"}}
+          cpus: "{{ .GetResource .Resources "gateway.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.request" }}"
     depends_on:
-      - search
+      - historic-search
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
@@ -196,11 +226,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: {{ .GetValue .resources "historic.search.cpu.limit"}}
-          memory: {{ .GetValue .resources "historic.search.memory.limit"}}
+          cpus: "{{ .GetResource .Resources "historic.search.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "historic.search.memory.limit" }}"
         reservations:
-          cpus: {{ .GetValue .resources "historic.search.cpu.request"}}
-          memory: {{ .GetValue .resources "historic.search.memory.request"}}
+          cpus: "{{ .GetResource .Resources "historic.search.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "historic.search.memory.request" }}"
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
