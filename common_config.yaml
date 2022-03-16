@@ -70,6 +70,7 @@ search:
 logwatcher:
   logwatcher.api.http.port: "9050"
   tail.api.http.port: "9005"
+  alert.rules.file.url: "/bucket/folder/alert_rules.json"
   kafka.group.logwatcher: "episilia-logwatcher-group"
   kafka.group.logwatcher.alert: "episilia-logwatcher-alert-group"
   kafka.group.logwatcher.tail: "episilia-logwatcher-tail-group"
@@ -122,3 +123,4 @@ resources:
   tail.memory.request: "200Mi"
   historic.search.memory.limit: "1500Mi"
   historic.search.memory.request: "500Mi"
+

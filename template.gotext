@@ -1,4 +1,5 @@
 version: '3.4'
+
 networks:
   infra-kaf:
     driver: overlay
@@ -25,10 +26,11 @@ services:
     {{- range $key,$val:=.Cpanel}}
       {{ $key}}: "{{$val}}"{{end }}
       kafka.topic.alert.response.out: {{ .GetValue .Logwatcher "kafka.topic.alert.response.out"}}
+      kafka.group.logwatcher: {{ .GetValue .Logwatcher "kafka.group.logwatcher"}}
     network_mode: host
     ports:
-      - "{{ .GetValue .Cpanel "cpanel.api.grpc.port"}}:{{ .GetValue .Cpanel "cpanel.api.grpc.port"}}"
-      - "{{ .GetValue .Cpanel "cpanel.api.metrics.port"}}:{{ .GetValue .Cpanel "cpanel.api.metrics.port"}}"
+      - "{{ .GetValue .Cpanel "cpanel.api.grpc.port" }}:{{ .GetValue .Cpanel "cpanel.api.grpc.port" }}"
+      - "{{ .GetValue .Cpanel "cpanel.api.metrics.port" }}:{{ .GetValue .Cpanel "cpanel.api.metrics.port" }}"
     networks:
       - infra-kaf{{end}}
 
@@ -55,7 +57,7 @@ services:
       ops.server.mode: "gateway"
     network_mode: host
     ports:
-      - "{{ .GetValue .Gateway "gateway.api.http.port"}}:{{ .GetValue .Gateway "gateway.api.http.port"}}"
+      - "{{ .GetValue .Gateway "gateway.api.http.port" }}:{{ .GetValue .Gateway "gateway.api.http.port" }}"
     networks:
       - infra-kaf{{end}}
 
@@ -80,7 +82,7 @@ services:
       ops.server.mode: "indexer"
     network_mode: host
     ports:
-      - "{{ .GetValue .Indexer "indexer.api.http.port"}}:{{ .GetValue .Indexer "indexer.api.http.port"}}"
+      - "{{ .GetValue .Indexer "indexer.api.http.port" }}:{{ .GetValue .Indexer "indexer.api.http.port" }}"
     networks:
       - infra-kaf{{end}}
 
@@ -105,7 +107,7 @@ services:
       ops.server.mode: "optimizer"
     network_mode: host
     ports:
-      - "{{ .GetValue .Indexer "optimizer.api.http.port"}}:{{ .GetValue .Indexer "optimizer.api.http.port"}}"
+      - "{{ .GetValue .Indexer "optimizer.api.http.port" }}:{{ .GetValue .Indexer "optimizer.api.http.port" }}"
     networks:
       - infra-kaf{{end}}
       
@@ -131,7 +133,7 @@ services:
       search.mode: "live"
     network_mode: host
     ports:
-      - "{{ .GetValue .Search "search.api.grpc.port"}}:{{ .GetValue .Search "search.api.grpc.port"}}"
+      - "{{ .GetValue .Search "search.api.grpc.port" }}:{{ .GetValue .Search "search.api.grpc.port" }}"
     networks:
       - infra-kaf{{end}}
 
@@ -153,12 +155,14 @@ services:
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
     {{- range $key,$val:=.Logwatcher}}
       {{ $key}}: "{{$val}}"{{end }}
       ops.server.mode: "log_watcher"
     network_mode: host
     ports:
-      - "{{ .GetValue .Logwatcher "logwatcher.api.http.port"}}:{{ .GetValue .Logwatcher "logwatcher.api.http.port"}}"
+      - "{{ .GetValue .Logwatcher "logwatcher.api.http.port" }}:{{ .GetValue .Logwatcher "logwatcher.api.http.port" }}"
     networks:
       - infra-kaf{{end}}
   
@@ -182,13 +186,13 @@ services:
       {{ $key}}: "{{$val}}"{{end }}
     {{- range $key,$val:=.Logwatcher}}
       {{ $key}}: "{{$val}}"{{end }}
-      ops.server.mode: "log_watcher"
+      gateway.api.http.port: "{{ .GetValue .Logwatcher "tail.api.http.port" }}"
+      gateway.search.url: "{{ .GetValue .Gateway "gateway.search.url" }}"
     network_mode: host
     ports:
-      - "{{ .GetValue .Logwatcher "tail.api.http.port"}}:{{ .GetValue .Logwatcher "tail.api.http.port"}}"
+      - "{{ .GetValue .Logwatcher "tail.api.http.port" }}:{{ .GetValue .Logwatcher "tail.api.http.port" }}"
     networks:
       - infra-kaf{{end}}
-
 
 {{- if .HasService "historic-search"}}
   historic-gateway:
@@ -211,10 +215,10 @@ services:
     {{- range $key,$val:=.Gateway}}
       {{ $key}}: "{{$val}}"{{end }}
       ops.server.mode: "gateway"
-      gateway.api.http.port: {{ .GetValue .HistoricSearch "gateway.api.http.port"}}
+      gateway.api.http.port: {{ .GetValue .HistoricSearch "gateway.api.http.port" }}
     network_mode: host
     ports:
-      - "{{ .GetValue .HistoricSearch "gateway.api.http.port"}}:{{ .GetValue .HistoricSearch "gateway.api.http.port"}}"
+      - "{{ .GetValue .HistoricSearch "gateway.api.http.port" }}:{{ .GetValue .HistoricSearch "gateway.api.http.port" }}"
     networks:
       - infra-kaf{{end}}
 
@@ -240,7 +244,7 @@ services:
       search.mode: "fixed"
     network_mode: host
     ports:
-      - "{{ .GetValue .HistoricSearch "search.api.grpc.port"}}:{{ .GetValue .HistoricSearch "search.api.grpc.port"}}"
+      - "{{ .GetValue .HistoricSearch "search.api.grpc.port" }}:{{ .GetValue .HistoricSearch "search.api.grpc.port" }}"
     networks:
       - infra-kaf{{end}}
 
@@ -254,4 +258,3 @@ services:
       - "80:3000"
     networks:
       - infra-kaf{{end}}
-
