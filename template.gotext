@@ -127,6 +127,8 @@ services:
     environment:
     {{- range $key,$val:=.Common}}
       {{ $key}}: "{{$val}}"{{end }}
+   {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
     {{- range $key,$val:=.Search}}
       {{ $key}}: "{{$val}}"{{end }}
       ops.server.mode: "search"
