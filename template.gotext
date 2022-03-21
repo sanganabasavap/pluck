@@ -1,55 +1,262 @@
-version: '3'
+version: '3.4'
+
 networks:
   infra-kaf:
-    driver: bridge
+    driver: overlay
+
 services:
-{{- if .HasService "indexer"}}
-  indexer:
-    image: episilia/dev-log-indexer:{{.Version}}
+{{- if .HasService "cpanel"}}
+  cpanel:
+    image: episilia/cpanel:{{.Version}}
     restart: always
-    container_name: indexer
+    container_name: episilia-cpanel
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "cpanel.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "cpanel.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "cpanel.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "cpanel.memory.request" }}"
+    depends_on:
+      - gateway
     environment:
-        {{- range $key,$val:=.Config}}
-            {{ $key}}: {{$val}}{{end }}
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Cpanel}}
+      {{ $key}}: "{{$val}}"{{end }}
+      kafka.topic.alert.response.out: {{ .GetValue .Logwatcher "kafka.topic.alert.response.out"}}
+      kafka.group.logwatcher: {{ .GetValue .Logwatcher "kafka.group.logwatcher"}}
+    network_mode: host
     ports:
-      - "9090:9090"
+      - "{{ .GetValue .Cpanel "cpanel.api.grpc.port" }}:{{ .GetValue .Cpanel "cpanel.api.grpc.port" }}"
+      - "{{ .GetValue .Cpanel "cpanel.api.metrics.port" }}:{{ .GetValue .Cpanel "cpanel.api.metrics.port" }}"
     networks:
       - infra-kaf{{end}}
-{{- if .HasService "search"}}
-  search:
-    image: episilia/dev-search:{{.Version}}
-    restart: always
-    container_name: episilia-search
-    environment:
-        {{- range $key,$val:=.Config}}
-            {{ $key}}: {{$val}}{{end }}
-    ports:
-      - "4040:4040"
-    networks:
-      - infra-kaf{{end}}
+
 {{- if .HasService "gateway"}}
   gateway:
-    image: episilia/dev-gateway:{{.Version}}
+    image: episilia/gateway:{{.Version}}
     restart: always
     container_name: episilia-gateway
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "gateway.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "gateway.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.request" }}"
     depends_on:
       - search
     environment:
-  {{- range $key,$val:=.Config}}
-      {{ $key}}: {{$val}}{{end }}
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Gateway}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "gateway"
     network_mode: host
     ports:
-    - "9002:9002"{{end}}
+      - "{{ .GetValue .Gateway "gateway.api.http.port" }}:{{ .GetValue .Gateway "gateway.api.http.port" }}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "indexer"}}
+  indexer:
+    image: episilia/log-indexer:{{.Version}}
+    restart: always
+    container_name: episilia-indexer
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "indexer.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "indexer.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "indexer.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "indexer.memory.request" }}"
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "indexer"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Indexer "indexer.api.http.port" }}:{{ .GetValue .Indexer "indexer.api.http.port" }}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "optimizer"}}
+  optimizer:
+    image: episilia/log-indexer:{{.Version}}
+    restart: always
+    container_name: episilia-optimizer
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "optimizer.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "optimizer.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "optimizer.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "optimizer.memory.request" }}"
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "optimizer"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Indexer "optimizer.api.http.port" }}:{{ .GetValue .Indexer "optimizer.api.http.port" }}"
+    networks:
+      - infra-kaf{{end}}
+      
+{{- if .HasService "search"}}
+  search:
+    image: episilia/search:{{.Version}}
+    restart: always
+    container_name: episilia-search
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "search.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "search.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "search.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "search.memory.request" }}"
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+   {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Search}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "search"
+      search.mode: "live"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Search "search.api.grpc.port" }}:{{ .GetValue .Search "search.api.grpc.port" }}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "logwatcher"}}
+  logwatcher:
+    image: episilia/log-indexer:{{.Version}}
+    restart: always
+    container_name: episilia-logwatcher
+    depends_on:
+      - tail
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "logwatcher.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "logwatcher.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "logwatcher.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "logwatcher.memory.request" }}"
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Logwatcher}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "log_watcher"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Logwatcher "logwatcher.api.http.port" }}:{{ .GetValue .Logwatcher "logwatcher.api.http.port" }}"
+    networks:
+      - infra-kaf{{end}}
+  
+{{- if .HasService "logwatcher"}}
+  tail:
+    image: episilia/tail:{{.Version}}
+    restart: always
+    container_name: episilia-tail
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "tail.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "tail.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "tail.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "tail.memory.request" }}"
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Indexer}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Logwatcher}}
+      {{ $key}}: "{{$val}}"{{end }}
+      gateway.api.http.port: "{{ .GetValue .Logwatcher "tail.api.http.port" }}"
+      gateway.search.url: "{{ .GetValue .Gateway "gateway.search.url" }}"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .Logwatcher "tail.api.http.port" }}:{{ .GetValue .Logwatcher "tail.api.http.port" }}"
+    networks:
+      - infra-kaf{{end}}
+
 {{- if .HasService "historic-search"}}
   historic-gateway:
     image: episilia/gateway:{{.Version}}
     restart: always
     container_name: episilia-historic-gateway
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "gateway.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "gateway.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "gateway.memory.request" }}"
     depends_on:
       - historic-search
     environment:
-  {{- range $key,$val:=.Config}}
-      {{ $key}}: {{$val}}{{end }}
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.Gateway}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "gateway"
+      gateway.api.http.port: {{ .GetValue .HistoricSearch "gateway.api.http.port" }}
     network_mode: host
     ports:
-    - "9005:9005"{{end}}
+      - "{{ .GetValue .HistoricSearch "gateway.api.http.port" }}:{{ .GetValue .HistoricSearch "gateway.api.http.port" }}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "historic-search"}}
+  historic-search:
+    image: episilia/search:{{.Version}}
+    restart: always
+    container_name: episilia-historic-search
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ .GetResource .Resources "historic.search.cpu.limit" }}"
+          memory: "{{ .GetResource .Resources "historic.search.memory.limit" }}"
+        reservations:
+          cpus: "{{ .GetResource .Resources "historic.search.cpu.request" }}"
+          memory: "{{ .GetResource .Resources "historic.search.memory.request" }}"
+    environment:
+    {{- range $key,$val:=.Common}}
+      {{ $key}}: "{{$val}}"{{end }}
+    {{- range $key,$val:=.HistoricSearch}}
+      {{ $key}}: "{{$val}}"{{end }}
+      ops.server.mode: "search"
+      search.mode: "fixed"
+    network_mode: host
+    ports:
+      - "{{ .GetValue .HistoricSearch "search.api.grpc.port" }}:{{ .GetValue .HistoricSearch "search.api.grpc.port" }}"
+    networks:
+      - infra-kaf{{end}}
+
+{{- if .HasService "grafana"}}
+  grafana:
+    image: docker.io/grafana/grafana:8.0.5-ubuntu
+    restart: always
+    container_name: grafana
+    network_mode: host
+    ports:
+      - "80:3000"
+    networks:
+      - infra-kaf{{end}}
