@@ -27,6 +27,8 @@ services:
       {{ $key}}: "{{$val}}"{{end }}
       kafka.topic.alert.response.out: {{ .GetValue .Logwatcher "kafka.topic.alert.response.out"}}
       kafka.group.logwatcher: {{ .GetValue .Logwatcher "kafka.group.logwatcher"}}
+      cpanel.ops.healthchecks.interval.mins: {{ .GetValue .cpanel "cpanel.ops.healthchecks.interval.mins"}}
+      cpanel.ops.healthchecks.exclude.list: {{ .GetValue .cpanel "cpanel.ops.healthchecks.exclude.list"}}
     network_mode: host
     ports:
       - "{{ .GetValue .Cpanel "cpanel.api.grpc.port" }}:{{ .GetValue .Cpanel "cpanel.api.grpc.port" }}"
