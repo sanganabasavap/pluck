@@ -21,6 +21,10 @@ common:
   datastore.s3.bucket: "episilia-bucket"
   datastore.s3.folder: "episilia-folder"
   datastore.s3.work.folder: "work-folder"
+  datastore.s3.sign.payload: "true"
+  datastore.s3.url.prefix: "s3://"
+  datastore.s3.useArn: "false"
+  datastore.s3.assumerole: ""
   kafka.indexer.logs.topics: "log"
   kafka.metadata.broker.list: "localhost:9092"
   kafka.indexer.group: "episilia-indexer-group"
@@ -28,6 +32,15 @@ common:
   ops.cpanel.data.publish.interval.seconds: "600"
   ops.license.url: "episilia_cpanel:8080"
   ops.log.debug: "true"
+  kafka.indexer.broker.list: "localhost:9092"
+  kafka.indexer.broker.security.mode: "none"    #othervalues as well(login, oauth, kerberos
+  kafka.indexer.broker.security.protocol: "SASL_SSL" #plaintext, ssl, sasl_plaintext, sasl_ssl
+  kafka.broker.sasl.mechanism: "SCRAM-SHA-512"  #PLAIN, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER, GSSAPI
+  kafka.broker.sasl.username: "usernamecreate"
+  kafka.broker.sasl.password: "passwordcreate"
+  kafka.indexer.logs.topics: "nameof the topic"
+  kafka.indexer.group: "episilia-indexer-group"  # Kafka consumer-group for indexer
+  
 
 cpanel:
   cpanel.api.access.key: "token"
@@ -37,6 +50,8 @@ cpanel:
   cpanel.gateway.server: "episilia_gateway:9002"
   kafka.group.cpanel: "episilia-cpanel-group"
   alert.prometheus.gateway: "pushgateway:5070"
+  cpanel.ops.healthchecks.interval.mins: "5"
+  cpanel.ops.healthchecks.exclude.list: ""
 
 gateway:
   gateway.api.http.port: "9002"
